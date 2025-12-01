@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tu Tiên Vật Lí 11 - Sóng Dừng</title>
+  <style>
+    :root{
+      --bg1:#0f1025; --bg2:#1b1e3b; --accent:#facc15; --primary:#60a5fa; --ok:#4ade80; --bad:#ef4444;
+      --panel:#ffffff18; --panel2:#ffffff26;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, "Segoe UI", sans-serif;
+      color: #fff;
+      background: radial-gradient(1200px 800px at 50% -20%, #3b1d5a 0%, #151635 40%, #0f1025 100%),
+                  linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(6px);
+      background: linear-gradient(90deg, #ffffff10, #00000000);
+      border-bottom: 1px solid #ffffff20;
+    }
+    header .title { font-weight: 700; color: var(--accent); }
+    header .info { font-size: 14px; opacity: .85; }
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid #ffffff25;
+      border-radius: 14px;
+      padding: 14px;
+      min-height: 280px;
+    }
+    .left {
+      background: linear-gradient(180deg, #ffffff10, #ffffff08);
+      position: relative;
+      overflow: hidden;
+    }
+    .aura {
+      position: absolute; inset: -30%;
+      background:
+        radial-gradient(450px 260px at 15% 20%, #5b21b616 0%, transparent 60%),
+        radial-gradient(520px 280px at 85% 40%, #22c55e22 0%, transparent 65%),
+        radial-gradient(400px 240px at 50% 85%, #60a5fa18 0%, transparent 60%);
+      filter: blur(12px);
+      pointer-events: none;
+    }
+    h1, h2 { color: var(--accent); margin: 6px 0 10px; }
+    .intro { line-height: 1.6; font-size: 15px; }
+    .realm-list { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; margin-top: 10px; }
+    .realm {
+      background: #0b0c1f80; border: 1px solid #ffffff20; border-radius: 10px; padding: 10px; font-size: 14px;
+    }
+    .right { background: var(--panel2); }
+    label { font-size: 14px; opacity: .9; }
+    input, select, button {
+      width: 100%; padding: 10px 12px; margin-top: 6px; border: 1px solid #ffffff30; border-radius: 10px;
+      background: #0b0c1f; color: #fff; font-size: 16px;
+    }
+    button.primary { background: linear-gradient(90deg, #22c55e, #a3e635); border: none; color: #04120b; font-weight: 700; }
+    .control-grid { display: grid; gap: 10px; margin-top: 8px; }
+    .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .chip {
+      padding: 6px 10px; border-radius: 999px; border: 1px solid #ffffff25; background: #0b0c1f80; font-size: 13px;
+    }
+    .hud {
+      margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 14px;
+    }
+    .pill { background: #0b0c1f90; border: 1px solid #ffffff25; border-radius: 999px; padding: 8px 10px; text-align: center; }
+    .quiz-box {
+      margin-top: 12px; background: #0b0c1fb0; border: 1px solid #ffffff25; border-radius: 12px; padding: 12px;
+      display: none;
+    }
+    .question { font-size: 18px; line-height: 1.5; }
+    .answers { display: grid; gap: 8px; margin-top: 10px; }
+    .answers button { background: #1d4ed8; border: none; }
+    .answers button:hover { filter: brightness(1.08); }
+    .status { margin-top: 8px; font-size: 14px; opacity: .9; }
+    .progress {
+      height: 8px; background: #0b0c1f; border-radius: 999px; border: 1px solid #ffffff22; margin-top: 8px; overflow: hidden;
+    }
+    .bar { height: 100%; width: 0%; background: linear-gradient(90deg, #22c55e, #3b82f6); transition: width .2s linear; }
+    .toast {
+      position: fixed; bottom: 14px; left: 14px; right: 14px; background: #0b0c1fee; border: 1px solid #22c55e55;
+      border-radius: 12px; padding: 10px 12px; display: none; font-size: 15px;
+    }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 999px; background: #22c55e22; border: 1px solid #22c55e66; color: #a7f3d0; font-size: 12px; margin-left: 6px; }
+    .fail { border-color: #ef444477; background: #150c0cee; color: #fecaca; }
+    .rank { margin-top: 12px; display: none; }
+    .rank .item { display:flex; align-items:center; justify-content:space-between; padding:8px 10px; border:1px solid #ffffff20; border-radius:10px; background:#0b0c1f80; margin-top:6px; }
+    @media (max-width: 860px) {
+      .container { grid-template-columns: 1fr; }
+      header .info { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">Tu Tiên Vật Lí 11 — Sóng dừng</div>
+    <div class="info">Mỗi câu: 10 giây • Đúng +100 linh khí • Sai quay đầu cảnh giới</div>
+  </header>
+
+  <div class="container">
+    <div class="panel left">
+      <div class="aura"></div>
+      <h1>Hành trình tu tiên</h1>
+      <p class="intro">
+        Bạn là tu sĩ bước vào đạo, tu luyện qua các cảnh giới bằng tri thức Sóng dừng (Vật Lí 11).
+        Mỗi cảnh giới có số câu tăng dần, sai là phải tu lại từ đầu cảnh giới. Tích lũy linh khí để thăng cấp!
+      </p>
+      <div class="realm-list">
+        <div class="realm">Luyện khí — 2 câu</div>
+        <div class="realm">Trúc cơ — 4 câu</div>
+        <div class="realm">Kết Đan — 6 câu</div>
+        <div class="realm">Kết Đan hậu kỳ — 10 câu</div>
+        <div class="realm">Nguyên Anh — 15 câu</div>
+        <div class="realm">Hóa Thần — 20 câu</div>
+      </div>
+      <p class="intro" style="margin-top:10px">
+        Mẹo: Đọc kỹ khái niệm nút, bụng, điều kiện tạo sóng dừng và phân biệt với sóng chạy. Đừng để pháp trận vỡ!
+      </p>
+      <div class="rank" id="rankBox">
+        <h2>Bảng vinh danh</h2>
+        <div id="rankList"></div>
+      </div>
+    </div>
+
+    <div class="panel right">
+      <h2>Bảng điều khiển</h2>
+      <div class="control-grid">
+        <div>
+          <label for="name">Ghi danh</label>
+          <input id="name" placeholder="Nhập pháp danh tu sĩ..."/>
+        </div>
+        <div>
+          <label for="mode">Chế độ tu luyện</label>
+          <select id="mode">
+            <option>Đan sư</option>
+            <option>Kiếm tu</option>
+            <option>Pháp tu</option>
+          </select>
+          <div class="chips">
+            <div class="chip">Đan sư: +hiệu ứng búi linh khí</div>
+            <div class="chip">Kiếm tu: +tốc độ ánh sáng</div>
+            <div class="chip">Pháp tu: +ánh pháp trận</div>
+          </div>
+        </div>
+        <button class="primary" id="startBtn">Bắt đầu tu luyện</button>
+      </div>
+
+      <div class="hud">
+        <div class="pill" id="realmPill">Cảnh giới: —</div>
+        <div class="pill" id="qiPill">Linh khí: 0</div>
+      </div>
+
+      <div class="quiz-box" id="quizBox">
+        <div class="question" id="questionText"></div>
+        <div class="answers" id="answers"></div>
+        <div class="progress"><div class="bar" id="timeBar"></div></div>
+        <div class="status" id="statusText"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Thiết lập cảnh giới và số câu
+    const stages = [
+      { name: "Luyện khí", count: 2 },
+      { name: "Trúc cơ", count: 4 },
+      { name: "Kết Đan", count: 6 },
+      { name: "Kết Đan hậu kỳ", count: 10 },
+      { name: "Nguyên Anh", count: 15 },
+      { name: "Hóa Thần", count: 20 }
+    ];
+
+    // Ngân hàng 60 câu lý thuyết Sóng dừng (đủ cho 57 câu yêu cầu)
+    // Chủ đề: định nghĩa, nút/bụng, khoảng cách, điều kiện, tần số/họ mode, ví dụ, so sánh với sóng chạy, năng lượng
+    const bank = [
+      {q:"Sóng dừng là gì?",a:["Sóng giao thoa giữa sóng tới và phản xạ","Sóng lan truyền một chiều","Sóng cơ bất kỳ","Sóng do nguồn di chuyển"],c:0},
+      {q:"Nút sóng là điểm nào trên môi trường dao động?",a:["Dao động cực đại","Dao động cực tiểu","Không dao động","Dao động ngẫu nhiên"],c:2},
+      {q:"Bụng sóng là điểm nào?",a:["Biên độ cực đại","Biên độ bằng 0","Điểm phản xạ","Điểm truyền nguồn"],c:0},
+      {q:"Khoảng cách giữa hai nút liên tiếp là bao nhiêu?",a:["λ","λ/2","2λ","λ/4"],c:1},
+      {q:"Khoảng cách giữa hai bụng liên tiếp là bao nhiêu?",a:["λ/2","λ","2λ","λ/4"],c:0},
+      {q:"Khoảng cách giữa nút và bụng kề nhau là bao nhiêu?",a:["λ/4","λ/2","λ","2λ"],c:0},
+      {q:"Sóng dừng hình thành chủ yếu do hiện tượng gì?",a:["Nhiễu xạ","Giao thoa","Khúc xạ","Cộng hưởng âm"],c:1},
+      {q:"Trong sóng dừng, năng lượng có lan truyền theo phương truyền sóng không?",a:["Có","Không","Tùy biên độ","Tùy tần số"],c:1},
+      {q:"Điều kiện biên để có nút tại đầu cố định là gì?",a:["Biên độ cực đại","Biên độ bằng 0","Pha dao động lệch π/2","Không có điều kiện"],c:1},
+      {q:"Ví dụ thực tế điển hình của sóng dừng là gì?",a:["Dây đàn bịt hai đầu","Sóng biển khơi","Sóng địa chấn P","Sóng ánh sáng trắng"],c:0},
+      {q:"Trong mode cơ bản (n=1) của dây căng hai đầu cố định có bao nhiêu bụng?",a:["1","2","3","Không bụng"],c:1},
+      {q:"Trong mode cơ bản của dây căng hai đầu cố định có bao nhiêu nút (tính cả hai đầu)?",a:["1","2","3","0"],c:2},
+      {q:"Khi tăng tần số, số bụng trên dây hai đầu cố định",a:["Giảm","Tăng","Không đổi","Biến thiên ngẫu nhiên"],c:1},
+      {q:"Họ mode riêng của dây hai đầu cố định có tần số fn thỏa mãn",a:["fn = n·f1","fn = f1/n","fn = √n·f1","fn = n²·f1"],c:0},
+      {q:"Trong ống sáo hở-hở, khoảng cách giữa bụng liên tiếp là",a:["λ/2","λ","λ/4","3λ/4"],c:0},
+      {q:"Trong ống sáo hở-hở, tại hai đầu là",a:["Nút","Bụng","Một nút một bụng","Không xác định"],c:1},
+      {q:"Trong ống sáo hở-kín (một đầu bịt), tại đầu kín là",a:["Bụng","Nút","Không dao động","Dao động cực đại"],c:1},
+      {q:"Ống hở-kín có các mode thỏa điều kiện",a:["n = 1,2,3,...","n lẻ: 1,3,5,...","n chẵn: 2,4,6,...","Chỉ n=2"],c:1},
+      {q:"Ở nút sóng, biên độ dao động hạt môi trường",a:["Cực đại","Cực tiểu","Bằng 0","Không xác định"],c:2},
+      {q:"Ở bụng sóng, biên độ dao động hạt môi trường",a:["Bằng 0","Cực đại","Cực tiểu","Không xác định"],c:1},
+      {q:"Sóng dừng khác sóng chạy ở điểm nào?",a:["Có nút và bụng cố định","Lan truyền năng lượng mạnh","Không có giao thoa","Không cần phản xạ"],c:0},
+      {q:"Bước sóng λ liên hệ với khoảng cách nút-bụng kề nhau như thế nào?",a:["λ = 4·d_nút-bụng","λ = 2·d_nút-bụng","λ = d_nút-bụng","λ = 8·d_nút-bụng"],c:0},
+      {q:"Trong dây căng, sóng dừng tạo bởi hai sóng có",a:["Cùng biên độ, cùng tần số, ngược chiều","Khác tần số","Khác biên độ","Cùng chiều"],c:0},
+      {q:"Ở nút sóng, pha dao động của các điểm lân cận",a:["Như nhau","Khác nhau 180°","Ngẫu nhiên","Không xác định"],c:1},
+      {q:"Để có sóng dừng rõ trên dây, chọn tần số nguồn",a:["Bất kỳ","Gần mode riêng","Rất lớn","Rất nhỏ"],c:1},
+      {q:"Khi nguồn đúng tần số cộng hưởng, biên độ tại bụng",a:["Tăng lớn","Giảm nhỏ","Bằng 0","Không đổi"],c:0},
+      {q:"Trong sóng dừng, các bụng cách nhau",a:["λ","λ/2","2λ","λ/4"],c:1},
+      {q:"Trong sóng chạy, mọi điểm trên dây",a:["Dao động với cùng biên độ","Dao động với biên độ khác nhau theo vị trí","Không dao động","Dao động một lần rồi dừng"],c:1},
+      {q:"Năng lượng trong sóng dừng phân bố",a:["Đều toàn môi trường","Tập trung quanh bụng","Chỉ ở nút","Không tồn tại"],c:1},
+      {q:"Trong dây hai đầu cố định, mode n=3 có bao nhiêu bụng?",a:["2","3","4","1"],c:1},
+      {q:"Trong dây hai đầu cố định, mode n=3 có bao nhiêu nút (kể cả đầu)?",a:["3","4","5","2"],c:2},
+      {q:"Ống hở-kín mode cơ bản có dạng",a:["Bụng ở hai đầu","Nút ở hai đầu","Bụng ở hở, nút ở kín","Nút ở hở, bụng ở kín"],c:2},
+      {q:"Sóng dừng xuất hiện mạnh khi có",a:["Phản xạ tốt tại biên","Tắt phản xạ","Khúc xạ mạnh","Nhiễu xạ"],c:0},
+      {q:"Trong thí nghiệm Melde (dây rung), sóng dừng xuất hiện khi",a:["Chọn tần số thích hợp","Giảm lực căng","Tăng ma sát","Bỏ nguồn"],c:0},
+      {q:"Pha dao động giữa hai bụng kề nhau",a:["Giống nhau","Khác nhau π","Khác nhau π/2","Ngẫu nhiên"],c:1},
+      {q:"Pha dao động giữa hai nút kề nhau",a:["Giống nhau","Khác nhau π","Khác nhau π/2","Ngẫu nhiên"],c:1},
+      {q:"Trong sóng dừng, biên độ phụ thuộc",a:["Vị trí","Thời gian","Nguồn nhiệt","Không phụ thuộc"],c:0},
+      {q:"Trong sóng chạy, biên độ phụ thuộc",a:["Vị trí theo dạng nút-bụng","Chủ yếu không đổi theo vị trí (trong môi trường đồng nhất)","Chỉ thời gian","Không phụ thuộc gì"],c:1},
+      {q:"Điều kiện để tạo nút tại đầu tự do (hở) của ống khí là",a:["Biên độ bằng 0","Biên độ cực đại","Pha lệch π","Không điều kiện"],c:1},
+      {q:"Trong dây, tốc độ truyền v phụ thuộc",a:["Lực căng và khối lượng riêng tuyến tính","Chiều dài dây","Pha nguồn","Không phụ thuộc"],c:0},
+      {q:"Tần số riêng f1 của dây 2 đầu cố định tăng khi",a:["Tăng chiều dài","Giảm lực căng","Tăng lực căng hoặc giảm khối lượng riêng","Tăng ma sát"],c:2},
+      {q:"Sóng dừng có thể thấy trong nhạc cụ nào?",a:["Piano, guitar, sáo","Kèn harmonica","Trống chỉ có xung","Không nhạc cụ nào"],c:0},
+      {q:"Ở nút, vận tốc tức thời của phần tử môi trường",a:["Luôn bằng 0","Cực đại","Cực tiểu","Không xác định"],c:0},
+      {q:"Ở bụng, vận tốc tức thời của phần tử môi trường",a:["Luôn bằng 0","Cực đại khi qua vị trí cân bằng","Cực tiểu","Không xác định"],c:1},
+      {q:"Mô tả hình dạng mode n=2 của dây 2 đầu cố định",a:["1 bụng giữa","2 bụng, 3 nút (tính cả hai đầu)","3 bụng, 4 nút","Không bụng"],c:1},
+      {q:"Trong ống hở-hở, mode n=2 có",a:["Bụng ở hai đầu và 1 bụng giữa","Nút ở hai đầu","Chỉ 1 bụng","Không bụng"],c:0},
+      {q:"Sóng dừng xuất hiện khi hai sóng chồng chất có",a:["Khác tần số chút ít","Cùng tần số và biên độ gần bằng","Cùng pha hoàn toàn","Khác phương truyền"],c:1},
+      {q:"Biểu hiện quan sát để phân biệt sóng dừng trên dây",a:["Các điểm cùng dao động","Có điểm đứng yên (nút)","Biên độ tăng dần theo thời gian","Dây rối"],c:1},
+      {q:"Trong sóng chạy, năng lượng",a:["Không truyền","Truyền theo hướng sóng","Chỉ tại nguồn","Chỉ tại biên"],c:1},
+      {q:"Sóng dừng trên dây tạo thành các đoạn",a:["Đoạn yên và đoạn mạnh xen kẽ","Đoạn đều nhau","Đoạn chỉ mạnh","Đoạn chỉ yên"],c:0},
+      {q:"Điều kiện hình thành mode n trên dây 2 đầu cố định: chiều dài L thỏa",a:["L = n·λ","L = n·λ/2","L = λ/(2n)","L = 2n·λ"],c:1},
+      {q:"Trong ống hở-kín, chiều dài L thỏa mode n lẻ",a:["L = n·λ/2","L = n·λ","L = (2n-1)·λ/4","L = λ/(2n)"],c:2},
+      {q:"Nếu thay đổi điều kiện biên, họ mode",a:["Không đổi","Thay đổi dạng và tần số riêng","Chỉ đổi tên","Biến mất"],c:1},
+      {q:"Sóng dừng có dạng phương trình tổng quát (ý niệm)",a:["Hợp của hai sóng ngược chiều","Một sóng độc lập","Một xung","Một dao động tắt dần"],c:0},
+      {q:"Ở bụng, lực đàn hồi tức thời trên dây",a:["Luôn bằng 0","Cực đại khi lệch khỏi cân bằng","Không xác định","Luôn dương"],c:1},
+      {q:"Ở nút, lực đàn hồi tức thời trên dây",a:["Luôn bằng 0 do không lệch vị trí","Cực đại","Không xác định","Luôn âm"],c:0},
+      {q:"Quan hệ vị trí nút với biên cố định của dây",a:["Trùng biên cố định","Cách biên một λ/2","Trùng bụng","Không xác định"],c:0},
+      {q:"Trong sóng dừng âm trong ống hở-hở, áp suất biến thiên tại đầu",a:["Cực đại","Bằng 0 (nút áp suất)","Ngẫu nhiên","Không đổi"],c:1},
+      {q:"Trong sóng dừng âm ống hở-kín, tại đầu kín áp suất",a:["Nút áp suất","Bụng áp suất","Không đổi","Ngẫu nhiên"],c:1},
+      {q:"Sóng dừng yêu cầu thời gian đo",a:["Rất ngắn","Đủ dài để ổn định chế độ","Không cần","Tùy ý"],c:1},
+      {q:"Nếu tần số lệch khỏi mode, mẫu hình nút-bụng",a:["Biến mất hoặc mờ","Không đổi","Tăng rõ rệt","Thêm nút"],c:0},
+      {q:"Khi ma sát/giảm chấn tăng, biên độ bụng",a:["Giảm","Tăng","Không đổi","Tăng rồi giảm"],c:0},
+      {q:"Trong dây, hệ số chất lượng Q cao dẫn đến",a:["Sóng dừng sắc nét","Sóng dừng mờ","Không sóng","Nhiều nhiễu"],c:0},
+      {q:"Sóng dừng là hiện tượng của",a:["Giao thoa sóng cùng tần số ngược chiều","Khúc xạ mạnh","Nhiễu xạ ở khe","Nguồn đa tần"],c:0}
+    ];
+
+    // Tạo thứ tự câu theo cảnh giới
+    const stageOrder = (() => {
+      let idx = 0, order = [];
+      for (const st of stages) {
+        order.push({start: idx, count: st.count});
+        idx += st.count;
+      }
+      return order;
+    })();
+
+    // Lấy đủ 57 câu từ ngân hàng (shuffle rồi cắt)
+    const selected = (() => {
+      const arr = [...bank];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr.slice(0, stageOrder[stageOrder.length-1].start + stageOrder[stageOrder.length-1].count);
+    })();
+
+    // Trạng thái game
+    let stageIndex = 0;
+    let questionIndexInStage = 0;
+    let qi = 0;
+    let timer = null;
+    let t0 = 0;
+    const duration = 10000; // 10 giây
+
+    // DOM
+    const startBtn = document.getElementById('startBtn');
+    const quizBox = document.getElementById('quizBox');
+    const questionText = document.getElementById('questionText');
+    const answers = document.getElementById('answers');
+    const statusText = document.getElementById('statusText');
+    const timeBar = document.getElementById('timeBar');
+    const realmPill = document.getElementById('realmPill');
+    const qiPill = document.getElementById('qiPill');
+    const toast = document.getElementById('toast');
+    const rankBox = document.getElementById('rankBox');
+    const rankList = document.getElementById('rankList');
+
+    function showToast(msg, good=true) {
+      toast.textContent = msg;
+      toast.className = good ? 'toast' : 'toast fail';
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 1400);
+    }
+
+    function updateHUD() {
+      realmPill.textContent = `Cảnh giới: ${stages[stageIndex]?.name ?? '—'}`;
+      qiPill.textContent = `Linh khí: ${qi}`;
+    }
+
+    function startGame() {
+      const name = document.getElementById('name').value.trim();
+      if (!name) { showToast('Hãy nhập pháp danh tu sĩ!', false); return; }
+      stageIndex = 0;
+      questionIndexInStage = 0;
+      qi = 0;
+      quizBox.style.display = 'block';
+      rankBox.style.display = 'none';
+      updateHUD();
+      nextQuestion();
+      showToast(`Tu sĩ ${name} — khởi tu!`);
+    }
+
+    function getCurrentQuestion() {
+      const base = stageOrder[stageIndex].start;
+      const idx = base + questionIndexInStage;
+      return selected[idx];
+    }
+
+    function nextQuestion() {
+      clearInterval(timer);
+      timeBar.style.width = '0%';
+
+      const st = stages[stageIndex];
+      if (!st) { // Hoàn tất Hóa Thần
+        endGame(true);
+        return;
+      }
+      const q = getCurrentQuestion();
+      questionText.innerHTML = `<span class="badge">${st.name}</span> ${q.q}`;
+      answers.innerHTML = '';
+      q.a.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(i === q.c);
+        answers.appendChild(btn);
+      });
+      statusText.textContent = `Câu ${questionIndexInStage+1}/${st.count} • Thời gian: 10 giây`;
+      // Timer thanh tiến độ
+      t0 = Date.now();
+      timer = setInterval(() => {
+        const elapsed = Date.now() - t0;
+        const p = Math.min(100, (elapsed/duration)*100);
+        timeBar.style.width = p + '%';
+        if (elapsed >= duration) {
+          clearInterval(timer);
+          checkAnswer(false);
+        }
+      }, 60);
+    }
+
+    function checkAnswer(correct) {
+      clearInterval(timer);
+      if (correct) {
+        qi += 100;
+        questionIndexInStage++;
+        showToast('+100 linh khí', true);
+        if (questionIndexInStage >= stages[stageIndex].count) {
+          // Sang cảnh giới mới
+          stageIndex++;
+          questionIndexInStage = 0;
+          updateHUD();
+          if (stageIndex >= stages.length) {
+            endGame(true);
+            return;
+          } else {
+            showToast(`Đột phá ${stages[stageIndex].name}!`);
+          }
+        }
+      } else {
+        showToast('Pháp trận vỡ! Tu lại cảnh giới này...', false);
+        questionIndexInStage = 0;
+      }
+      updateHUD();
+      nextQuestion();
+    }
+
+    function endGame(victory) {
+      quizBox.style.display = 'none';
+      const name = document.getElementById('name').value.trim() || 'Vô Danh';
+      if (victory) {
+        showToast(`🎉 Hóa Thần! Tổng linh khí: ${qi}`);
+        // Lưu vinh danh cục bộ
+        const record = { name, qi, time: new Date().toLocaleString() };
+        const hall = JSON.parse(localStorage.getItem('hall') || '[]');
+        hall.push(record);
+        hall.sort((a,b) => b.qi - a.qi);
+        localStorage.setItem('hall', JSON.stringify(hall.slice(0,10)));
+        // Hiện bảng
+        const list = JSON.parse(localStorage.getItem('hall') || '[]');
+        rankList.innerHTML = list.map((r,i)=>
+          `<div class="item"><div>#${i+1} — ${r.name}</div><div>${r.qi} linh khí</div></div>`
+        ).join('');
+        rankBox.style.display = 'block';
+      } else {
+        showToast('Kết thúc tu luyện', false);
+      }
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startGame);
+  </script>
+</body>
+</html>
